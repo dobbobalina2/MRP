@@ -1,0 +1,7 @@
+Progress: resolved 0, reused 1, downloaded 0, added 0
+ WARN  deprecated eslint-config-standard-with-typescript@39.1.1: Please use eslint-config-love, instead.
+ ERR_PNPM_FETCH_404  GET https://registry.npmjs.org/16.8.0: Not Found - 404
+
+16.8.0 is not in the npm registry, or you have no permission to fetch it. Did you mean 1?
+
+No authorization header was set for the request.

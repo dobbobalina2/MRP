@@ -1,25 +1,14 @@
-# RISC Zero Foundry Template
+# Bonsai Pay Demo
 
-Starter template for writing an application using [RISC Zero] and Ethereum.
+This demo uses Google Sign-In to generate a client authentication token. The token includes a nonce that contains the user's connected wallet address, aligning with similar principles described in the [OpenPubkey: Augmenting OpenID Connect with User held Signing Keys](https://eprint.iacr.org/2023/296) paper. The JWT's integrity is verified within the guest [zkVM Program] using Google's public RS256 signing [certificates](https://www.googleapis.com/oauth2/v3/certs). The guest uses [Bonsai] to run the [RISC Zero zkVM], generating a cryptographic proof of the JWT's integrity, issuing a receipt that comprises the SNARK, an obfuscated identifier, and the user's address. The finalized proof is posted onchain and verified with the [RISC Zero Verifier] and used for arbitrary transactions, if valid. 
 
-This repository implements an application on Ethereum utilizing RISC Zero as a [coprocessor] to the smart contract application.
-It provides a starting point for building powerful new applications on Ethereum that offload computationally intensive (i.e. gas expensive), or would be difficult to implement Solidity (e.g. ed25519 signature verification, or HTML parsing).
+> **Note: This software is not production ready. Do not use in production.**
 
-<!-- TODO(#100) Integrate support for Steel more directly into this repo -->
-Integrate with [Steel][steel-repo] to execute view calls and simulate transactions on Ethereum. Check out the [ERC-20 counter][erc20-counter] demo to see an example.
+This is based on the [Bonsai Foundry Template] for writing an application using [RISC Zero] and Ethereum.
 
-Prove computation with the [RISC Zero zkVM] and verify the results in your Ethereum contract.
+This repository implements the application on Ethereum utilizing RISC Zero as a [coprocessor] to the smart contract application. Prove computation with the [RISC Zero zkVM] and verify the results in your Ethereum contract. 
 
-## Overview
-
-Here is a simplified overview of how devs can integrate RISC Zero, with [Bonsai] proving, into their Ethereum smart contracts:
-
-![RISC Zero Foundry Template Diagram](images/risc0-foundry-template.png)
-
-1. Run your application logic in the [RISC Zero zkVM]. The provided [publisher] app sends an off-chain proof request to the [Bonsai] proving service.
-2. [Bonsai] generates the program result, written to the [journal], and a SNARK proof of its correctness.
-3. The [publisher] app submits this proof and journal on-chain to your app contract for validation.
-4. Your app contract calls the [RISC Zero Verifier] to validate the proof. If the verification is successful, the journal is deemed trustworthy and can be safely used.
+Check out the [developer FAQ] for more information on zkVM application design.
 
 ## Dependencies
 
@@ -42,28 +31,17 @@ cargo binstall cargo-risczero
 cargo risczero install
 ```
 
+### Google Cloud Platform
+
+This demo requires a Google Cloud Platform account. You will also need an account to generate a client ID to enable Sign-In-With-Google with OIDC via Google Cloud Identity Platform. You can find more information on how to set up Google Sign-In [here](https://developers.google.com/identity/sign-in/web/sign-in) and [here](https://developers.google.com/identity/protocols/oauth2/openid-connect).
+
+### Etherscan API Key
+
+You will need an Etherscan API key to verify the contract's source code. You can get one [here](https://etherscan.io/apis). This is not required, but is helpful for verifying the contract source code and generating the ABI bindings with [`wagmi`](https://wagmi.sh), which is used in the Bonsai Pay UI.
+
 Now you have all the tools you need to develop and deploy an application with [RISC Zero].
 
 ## Quick Start
-
-First, install the RISC Zero toolchain using the [instructions above](#dependencies).
-
-Now, you can initialize a new RISC Zero project at a location of your choosing:
-
-```sh
-forge init -t risc0/bonsai-foundry-template ./my-project
-```
-
-Congratulations! You've just started your first RISC Zero project.
-
-Your new project consists of:
-
-- a [zkVM program] (written in Rust), which specifies a computation that will be proven;
-- a [app contract] (written in Solidity), which uses the proven results;
-- a [publisher] which makes proving requests to [Bonsai] and posts the proof to Ethereum.
-  We provide an example implementation, but your dApp interface or application servers could act as the publisher.
-
-### Build the Code
 
 - Builds for zkVM program, the publisher app, and any other Rust code.
 
@@ -77,6 +55,12 @@ Your new project consists of:
 
   ```sh
   forge build
+  ```
+
+- Create a `.env` and update the necessary environment variables as shown in the [`.env.example`] file, for the UI.
+
+  ```sh
+  cp ui/.env.example ui/.env
   ```
 
 ### Run the Tests
@@ -93,54 +77,56 @@ Your new project consists of:
   RISC0_DEV_MODE=true forge test -vvv 
   ```
 
-- Run the same tests, with the full zkVM prover rather than dev-mode, by setting `RISC0_DEV_MODE=false`.
-
-  ```sh
-  RISC0_DEV_MODE=false forge test -vvv
-  ```
-
-  Producing the [Groth16 SNARK proofs][Groth16] for this test requires running on an x86 machine with [Docker] installed, or using [Bonsai](#configuring-bonsai). Apple silicon is currently unsupported for local proving, you can find out more info in the relevant issues [here](https://github.com/risc0/risc0/issues/1520) and [here](https://github.com/risc0/risc0/issues/1749). 
-
-## Develop Your Application
-
-To build your application using the RISC Zero Foundry Template, you’ll need to make changes in three main areas:
-
-- ***Guest Code***: Write the code you want proven in the [methods/guest](./methods/guest/) folder. This code runs off-chain within the RISC Zero zkVM and performs the actual computations. For example, the provided template includes a computation to check if a given number is even and generate a proof of this computation.
-- ***Smart Contracts***: Write the on-chain part of your project in the [contracts](./contracts/) folder. The smart contract verifies zkVM proofs and updates the blockchain state based on the results of off-chain computations. For instance, in the [EvenNumber](./contracts/EvenNumber.sol) example, the smart contract verifies a proof that a number is even and stores that number on-chain if the proof is valid.
-- ***Publisher Application***: Adjust the publisher example in the [apps](./apps/) folder. The publisher application bridges off-chain computation with on-chain verification by submitting proof requests, receiving proofs, and publishing them to the smart contract on Ethereum.
-
 ### Configuring Bonsai
 
 ***Note:*** *To request an API key [complete the form here](https://bonsai.xyz/apply).*
 
-With the Bonsai proving service, you can produce a [Groth16 SNARK proof][Groth16] that is verifiable on-chain.
+With the Bonsai proving service, you can produce a [Groth16 SNARK proof] that is verifiable on-chain.
 You can get started by setting the following environment variables with your API key and associated URL.
 
 ```bash
-export BONSAI_API_KEY="YOUR_API_KEY" # see form linked above
-export BONSAI_API_URL="BONSAI_URL" # provided with your api key
+export BONSAI_API_KEY="wxCJQ0ONxn3ID4Lx5CaB81Qk7EaqD7QH4zY2ovDD" # see form linked above
+export BONSAI_API_URL="https://api.bonsai.xyz/" # provided with your api key
 ```
 
 Now if you run `forge test` with `RISC0_DEV_MODE=false`, the test will run as before, but will additionally use the fully verifying `RiscZeroGroth16Verifier` contract instead of `MockRiscZeroVerifier` and will request a SNARK receipt from Bonsai.
 
-```bash
-RISC0_DEV_MODE=false forge test -vvv
+```sh
+RISC0_DEV_MODE=false forge test -vvv --match-path tests/AaFork.t.sol --fork-url https://ethereum-holesky-rpc.publicnode.com 
 ```
 
-### Deterministic Builds
+### Deploying the Bonsai Pay Contract
 
-By setting the environment variable `RISC0_USE_DOCKER` a containerized build process via Docker will ensure that all builds of your guest code, regardless of the machine or local environment, will produce the same [image ID][image-id].
-The [image ID][image-id], and its importance to security, is explained in more detail in our [developer FAQ].
-
+To deploy the Bonsai Pay contract, you will need to set the following environment variables. You can read more about deploying with Foundry scripts [here](https://book.getfoundry.sh/tutorials/solidity-scripting?highlight=Deploy#deploying-our-contract). Please note that the contracts are unaudited and should not be used in production chains.
+//Public key 0xd93565F50a627E36a2E8D6742aA49DD16fECd52C
 ```bash
-RISC0_USE_DOCKER=1 cargo build
+export ETH_WALLET_PRIVATE_KEY="0x6571953a6b300c2d52b807457d2af3e621581f3259cf3f1c0bdc0d317842fc73"
 ```
 
-> ***Note:*** *This requires having Docker installed and in your PATH. To install Docker see [Get Docker][Docker].*
+You can deploy the contract using the forge deploy script. 
+  
+  ```sh
+  forge script script/Deploy.s.sol  --rpc-url https://eth-holesky.g.alchemy.com/v2/tS791umNStZEi7JR5hBHzoGr8SowKlpX	 --broadcast --etherscan-api-key A25Y2T37SHZXCNM34ZBS2TVNDB4RTM1QNV --verify 
+  ```
 
-## Deploy Your Application
+### Running the Application
 
-When you're ready, follow the [deployment guide] to get your application running on [Sepolia].
+- Start the publisher/subscriber app with the configured variables.
+
+  ```sh
+RUST_LOG=info cargo run --bin pubsub -- --chain-id 17000 \
+    --eth-wallet-private-key 0x75334dd5699d89cb2cb11ca1c244eb1f383da570ade7be6b996cb52ee07558f8 \
+    --rpc-url https://eth-holesky.g.alchemy.com/v2/tS791umNStZEi7JR5hBHzoGr8SowKlpX \
+    --contract 0x53744876a7Cc461DC5C992D6BA48E20F64f2f5b1
+  ```
+
+- Start the UI.
+
+  ```sh
+  cd ui
+  pnpm i 
+  pnpm run dev
+  ```
 
 ## Project Structure
 
@@ -155,42 +141,43 @@ Below are the primary files in the project directory
 │   └── src
 │       └── lib.rs                  // Utility functions
 │       └── bin                     
-│           └── publisher.rs        // Example app to publish program results into your app contract 
+│           └── pubsub.rs           // Publish program results and act as a backend server for proof requests from Bonsai Pay UI
 ├── contracts
-│   ├── EvenNumber.sol              // Basic example contract for you to modify
+│   ├── BonsaiPay.sol               // Bonsai Pay smart contract
 │   └── ImageID.sol                 // Generated contract with the image ID for your zkVM program
 ├── methods
 │   ├── Cargo.toml
 │   ├── guest
 │   │   ├── Cargo.toml
 │   │   └── src
-│   │       └── bin                 // You can add additional guest programs to this folder
-│   │           └── is_even.rs      // Example guest program for checking if a number is even
+│   │       └── bin                 
+│   │           └── jwt_validator.rs  // JWT validation guest program 
 │   └── src
-│       └── lib.rs                  // Compiled image IDs and tests for your guest programs
+│       └── lib.rs                  // Compiled image IDs and tests for guest program
 └── tests
-    ├── EvenNumber.t.sol            // Tests for the basic example contract
-    └── Elf.sol                     // Generated contract with paths the guest program ELF files.
+│   ├── BonsaiPay.t.sol             // BonsaiPay tests for the contract
+│   └── Elf.sol                     // Generated contract with paths the guest program ELF files.
+└── oidc-validator
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs                  // OIDC JWT validation library
+│       └── certs.rs                // JWT validation certificates
+└── ui
+    └── ...                         // React frontend UI for Bonsai Pay
 ```
 
 [Bonsai]: https://dev.bonsai.xyz/
 [Foundry]: https://getfoundry.sh/
-[Docker]: https://docs.docker.com/get-docker/
-[Groth16]: https://www.risczero.com/news/on-chain-verification
+[Groth16 SNARK proof]: https://www.risczero.com/news/on-chain-verification
 [RISC Zero Verifier]: https://github.com/risc0/risc0/blob/release-0.21/bonsai/ethereum/contracts/IRiscZeroVerifier.sol
 [RISC Zero installation]: https://dev.risczero.com/api/zkvm/install
 [RISC Zero zkVM]: https://dev.risczero.com/zkvm
 [RISC Zero]: https://www.risczero.com/
 [Sepolia]: https://www.alchemy.com/overviews/sepolia-testnet
-[app contract]: ./contracts/
 [cargo-binstall]: https://github.com/cargo-bins/cargo-binstall#cargo-binaryinstall
 [coprocessor]: https://www.risczero.com/news/a-guide-to-zk-coprocessors-for-scalability
-[deployment guide]: /deployment-guide.md
 [developer FAQ]: https://dev.risczero.com/faq#zkvm-application-design
-[image-id]: https://dev.risczero.com/terminology#image-id
 [install Rust]: https://doc.rust-lang.org/cargo/getting-started/installation.html
-[journal]: https://dev.risczero.com/terminology#journal
-[publisher]: ./apps/README.md
 [zkVM program]: ./methods/guest/
-[steel-repo]: https://github.com/risc0/risc0-ethereum/tree/main/steel
-[erc20-counter]: https://github.com/risc0/risc0-ethereum/tree/main/examples/erc20-counter
+[Bonsai Foundry Template]: https://github.com/risc0/bonsai-foundry-template
+[`.env.example`]: ./ui/.env.example

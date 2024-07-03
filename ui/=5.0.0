@@ -1,0 +1,23 @@
+Progress: resolved 0, reused 1, downloaded 0, added 0
+ WARN  deprecated eslint-config-standard-with-typescript@39.1.1: Please use eslint-config-love, instead.
+Progress: resolved 691, reused 648, downloaded 1, added 0
+ WARN  deprecated @motionone/vue@10.16.4: Motion One for Vue is deprecated. Use Oku Motion instead https://oku-ui.com/motion
+Packages: +3 -1
++++-
+Progress: resolved 857, reused 802, downloaded 2, added 3, done
+
+dependencies:
++ @tanstack/react-query 5.32.0
+- connectkit 1.7.3
++ connectkit 1.7.3
+
+ WARN  Issues with peer dependencies found
+.
+└─┬ connectkit
+  ├── ✕ unmet peer viem@2.x: found 1.18.4
+  ├── ✕ unmet peer wagmi@2.x: found 1.4.13
+  └─┬ styled-components
+    └── ✕ missing peer react-is@">= 16.8.0"
+Peer dependencies that should be installed:
+  react-is@">= 16.8.0"
+

@@ -8,3 +8,9 @@
 	path = lib/risc0-ethereum
 	url = https://github.com/risc0/risc0-ethereum
 	branch = v1.0.0-rc.6
+[submodule "lib/solidity-bytes-utils"]
+	path = lib/solidity-bytes-utils
+	url = https://github.com/GNSPS/solidity-bytes-utils
+[submodule "lib/murky"]
+	path = lib/murky
+	url = https://github.com/dmfxyz/murky

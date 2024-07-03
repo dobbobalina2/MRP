@@ -17,37 +17,49 @@ include!(concat!(env!("OUT_DIR"), "/methods.rs"));
 
 #[cfg(test)]
 mod tests {
-    use alloy_primitives::U256;
+    use alloy_primitives::{Address, FixedBytes, U256};
     use alloy_sol_types::SolValue;
+    use risc0_zkvm::sha::rust_crypto::{Digest as _, Sha256};
     use risc0_zkvm::{default_executor, ExecutorEnv};
 
-    #[test]
-    fn proves_even_number() {
-        let even_number = U256::from(1304);
-
-        let env = ExecutorEnv::builder()
-            .write_slice(&even_number.abi_encode())
-            .build()
-            .unwrap();
-
-        // NOTE: Use the executor to run tests without proving.
-        let session_info = default_executor().execute(env, super::IS_EVEN_ELF).unwrap();
-
-        let x = U256::abi_decode(&session_info.journal.bytes, true).unwrap();
-        assert_eq!(x, even_number);
+    // Mimic the `ClaimsData` and `Input` structs from the guest code.
+    alloy_sol_types::sol! {
+        struct ClaimsData {
+            address msg_sender;
+            bytes32 claim_id;
+        }
+        struct Input {
+            uint256 identity_provider;
+            string jwt;
+        }
     }
 
     #[test]
-    #[should_panic(expected = "number is not even")]
-    fn rejects_odd_number() {
-        let odd_number = U256::from(75);
-
+    fn test_validate_jwt() {
+        let jwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ijg3OTJlN2MyYTJiN2MxYWI5MjRlMTU4YTRlYzRjZjUxIn0.eyJlbWFpbCI6InRlc3RAZW1haWwuY29tIiwibm9uY2UiOiIweDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAifQ.TPUrmStwY2iuqMLXn3WvpiJY1W-bbrU12WGuv0nK9NJ6Q0bT8D_Ags8qj8LPOGGE1CdHn2isBcHgSxaEbNbW8Pz0fVWpFiehj8BwrC47Rld5dwazsxghF84D3q2So5ZBQslWqq1PRGEFKfx4AOgnS375oKi2jAZ3jN_58UNdgtUUdFhuOGHvGbWnr_fEWIbrEcfNFIWahngQ2dbU-sSNZFZ5L3L46bXUkBlbGGNztr6OiAHUwxqH2A02h1EceUol2m6_GTvPfdXKzd0Z34CJNW_loAEheH69hkmkGPbt3ta_XAFWRHgmVN7gFjErRmPiB818YgAFBBIuhZnjvGmC5Q";
+        let input_data: Input = Input {
+            identity_provider: U256::from(1),
+            jwt: jwt.to_string(),
+        };
         let env = ExecutorEnv::builder()
-            .write_slice(&odd_number.abi_encode())
+            .write_slice(&input_data.abi_encode())
             .build()
             .unwrap();
 
         // NOTE: Use the executor to run tests without proving.
-        default_executor().execute(env, super::IS_EVEN_ELF).unwrap();
+        let session_info = default_executor()
+            .execute(env, super::JWT_VALIDATOR_ELF)
+            .unwrap();
+
+        let output = ClaimsData::abi_decode(&session_info.journal.bytes, true).unwrap();
+
+        let test_claim_id =
+            FixedBytes::from_slice(Sha256::digest("test@email.com".as_bytes()).as_slice());
+
+        assert_eq!(output.claim_id, test_claim_id);
+        assert_eq!(
+            output.msg_sender,
+            Address::parse_checksummed("0x0000000000000000000000000000000000000000", None).unwrap()
+        );
     }
 }
