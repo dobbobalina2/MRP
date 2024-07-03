@@ -123,7 +123,7 @@ where
         .key_id
         .as_deref()
         .ok_or(OidcErr::KeyIdMissingError)?;
-
+    println!("kid: {:?} ", key_id);
     let key = keys
         .keys
         .iter()
@@ -166,11 +166,11 @@ pub mod test_oidc_validator {
 
     #[test]
     fn test_validate_test_jwt_valid_token() {
-        let jwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ijg3OTJlN2MyYTJiN2MxYWI5MjRlMTU4YTRlYzRjZjUxIn0.eyJlbWFpbCI6InRlc3RAZW1haWwuY29tIiwibm9uY2UiOiIweDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAifQ.TPUrmStwY2iuqMLXn3WvpiJY1W-bbrU12WGuv0nK9NJ6Q0bT8D_Ags8qj8LPOGGE1CdHn2isBcHgSxaEbNbW8Pz0fVWpFiehj8BwrC47Rld5dwazsxghF84D3q2So5ZBQslWqq1PRGEFKfx4AOgnS375oKi2jAZ3jN_58UNdgtUUdFhuOGHvGbWnr_fEWIbrEcfNFIWahngQ2dbU-sSNZFZ5L3L46bXUkBlbGGNztr6OiAHUwxqH2A02h1EceUol2m6_GTvPfdXKzd0Z34CJNW_loAEheH69hkmkGPbt3ta_XAFWRHgmVN7gFjErRmPiB818YgAFBBIuhZnjvGmC5Q";
+        let jwt = "eyJhbGciOiJSUzI1NiIsImtpZCI6Ijg3YmJlMDgxNWIwNjRlNmQ0NDljYWM5OTlmMGU1MGU3MmEzZTQzNzQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyODAzNzI3MzkzNjgtcXY0YnJ2YTBlaXEwdjFvbzFqdHNxZGFwaDZtdjdvbW8uYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyODAzNzI3MzkzNjgtcXY0YnJ2YTBlaXEwdjFvbzFqdHNxZGFwaDZtdjdvbW8uYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTc3MzYzNTE4MjIzNTY1NTc3NDkiLCJlbWFpbCI6ImpvaG5rZW5ueTY3OTlAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5vbmNlIjoiMHgyM0Q0YThkMjZCNzc3YzFGRGNCQjc0YWZhNzlDQWRBMWNhRjc3MkY4IiwibmJmIjoxNzE5OTQwNDE5LCJuYW1lIjoiSm9obiBLZW5ueSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NKdHczTGFqNXdUNUN4QjV2ZzJySjJkSnlHWWpTX29MaXliMEkzTDIwTmJFeHBBdXc9czk2LWMiLCJnaXZlbl9uYW1lIjoiSm9obiIsImZhbWlseV9uYW1lIjoiS2VubnkiLCJpYXQiOjE3MTk5NDA3MTksImV4cCI6MTcxOTk0NDMxOSwianRpIjoiOTk5ZmM4YjNlZjc4ZmIwYzEyODMzMGZkNGUyOWI0YTZmZmU4OGNiNyJ9.gFthXoI5nj-e59qEdiZwxCJO9WDZBVRvKqYNufrQIlRTnSRH6pjSyHJp0b_eGalM38zMZu4q8CdOAaNj-VwrrkKb-iGKBY_A7JngwSp3s_0F20lR-uMZQcrLK1iilAen1wRlj2NEbX6lZ3rmsrNRDwHBaUnJ_eZRjlOcKQjruqkGy5_aVEz6FzFglUzmQuHIlkLZIr3G8W56J5sLoj78oq_DgssfrdI-YDusr9N7FtsuGcoMtZ5AZNH19xkbx2-mQkcN_hXqHgliEh_OAmy99AyxhygEHg961jruj9vxcKQnQjDIcXCZEH1iVMOEPwoX8mLlGQXycqlS1OUD-rIoEQ";
         let decoded = decode_token::<super::TestClaims>(&jwt, &super::TEST_KEYS).unwrap();
 
-        assert_eq!(&decoded.email, "test@email.com");
-        assert_eq!(&decoded.nonce, "0x0000000000000000000000000000000000000000");
+        assert_eq!(&decoded.email, "johnkenny6799@gmail.com");
+        assert_eq!(&decoded.nonce, "0x23D4a8d26B777c1FDcBB74afa79CAdA1caF772F8");
     }
 
     #[test]
